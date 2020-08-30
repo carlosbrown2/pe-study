@@ -11,6 +11,7 @@ library(tidyverse)
 library(exact2x2)
 library(tidyr)
 library(dlookr)
+library(exact2x2)
 # library(reticulate)
 
 file_saddle <- file.path("saddle.csv")
@@ -19,6 +20,13 @@ file_nosaddle <- file.path("nosaddle.csv")
 df_saddle <- read.csv(file_saddle, header = TRUE)
 df_nosaddle <- read.csv(file_nosaddle, header = TRUE)
 ```
+
+```{r combine df}
+df_saddle$type <- factor("saddle")
+df_nosaddle$type <- factor("non-saddle")
+
+```
+
 
 ```{r bin by age}
 breaks = 7
@@ -43,6 +51,27 @@ table(df_saddle$adverseEvent, df_saddle$PESI.Class)
 ```{r}
 table(df_nosaddle$adverseEvent, df_nosaddle$PESI.Class)
 ```
+
+```{r power analysis}
+
+```
+
+```{r control for confounders}
+
+```
+
+Hypothesis test is set based on what constitutes surprise for the doctor
+H0: There is no difference in the adverse event odds ratio of saddle vs non-saddle in age and severity controlled groups
+H1: H0: There is a difference in the adverse event odds ratio of saddle vs non-saddle in age and severity controlled groups (two sided since no assumption made)
+
+```{r Run Fisher's exact test}
+
+```
+
+```{r control False Discovery Rate using BH or BY}
+
+```
+
 
 ```{python logit, eval=FALSE, include=FALSE}
 import statsmodels.discrete.discrete_model as sm
