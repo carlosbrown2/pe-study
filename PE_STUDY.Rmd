@@ -1,0 +1,61 @@
+---
+title: "pe_study"
+author: "Carlos Brown"
+date: "7/22/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(exact2x2)
+library(tidyr)
+library(dlookr)
+# library(reticulate)
+
+file_saddle <- file.path("saddle.csv")
+file_nosaddle <- file.path("nosaddle.csv")
+
+df_saddle <- read.csv(file_saddle, header = TRUE)
+df_nosaddle <- read.csv(file_nosaddle, header = TRUE)
+```
+
+```{r bin by age}
+breaks = 7
+df_saddle$age_bin <- cut(df_saddle$Age, breaks=breaks)
+df_nosaddle$age_bin <- cut(df_nosaddle$Age, breaks=breaks)
+```
+
+## PE Study
+
+```{r dianose saddle}
+diagnose(df_saddle)
+```
+
+```{r diagnose non-saddle}
+diagnose(df_nosaddle)
+```
+
+```{r}
+table(df_saddle$adverseEvent, df_saddle$PESI.Class)
+```
+
+```{r}
+table(df_nosaddle$adverseEvent, df_nosaddle$PESI.Class)
+```
+
+```{python logit, eval=FALSE, include=FALSE}
+import statsmodels.discrete.discrete_model as sm
+
+feat_cols = ['Age','Hight-cm','Weight-kg','HR','SBP','Temp (F)','PA/Aorta Ratio','RV/LV Ratio', 'PESI Class' , 'sPESI (low risk = 0; 1 = 1 or greater)','adverseEvent']
+
+features = df_saddle[feat_cols].dropna()
+target = features['adverseEvent']
+
+features.drop(columns='adverseEvent', inplace=True)
+logit = sm.Logit(target.values, features.astype(float))
+res = logit.fit()
+
+print(res.summary())
+```
+
