@@ -16,22 +16,28 @@ library(exact2x2)
 
 file_saddle <- file.path("saddle.csv")
 file_nosaddle <- file.path("nosaddle.csv")
+file_all <- file.path('all_types.csv')
 
 df_saddle <- read.csv(file_saddle, header = TRUE)
 df_nosaddle <- read.csv(file_nosaddle, header = TRUE)
+df_all <- read.csv(file_all, header = TRUE)
+
+paste('Number of data points for saddle:',nrow(df_saddle), sep = ' ')
+paste('Number of data points for non-saddle:',nrow(df_nosaddle), sep = ' ')
 ```
 
-```{r combine df}
+```{r change type to factor}
 df_saddle$type <- factor("saddle")
 df_nosaddle$type <- factor("non-saddle")
-
+df_all$type <- as.factor(df_all$type)
 ```
 
 
 ```{r bin by age}
-breaks = 7
+breaks = 5
 df_saddle$age_bin <- cut(df_saddle$Age, breaks=breaks)
 df_nosaddle$age_bin <- cut(df_nosaddle$Age, breaks=breaks)
+df_all$age_bin <- cut(df_all$Age, breaks=breaks)
 ```
 
 ## PE Study
@@ -44,34 +50,38 @@ diagnose(df_saddle)
 diagnose(df_nosaddle)
 ```
 
-```{r}
-table(df_saddle$adverseEvent, df_saddle$PESI.Class)
-```
+## Tables
 
-```{r}
-table(df_nosaddle$adverseEvent, df_nosaddle$PESI.Class)
+```{r adverse event along 3 dimensions}
+table_group <- table(df_all$adverseEvent, df_all$type, df_all$age_bin)
+test_mat <- as.matrix(table(df_all$adverseEvent, df_all$type))
+test_mat
 ```
 
 ```{r power analysis}
-
-```
-
-```{r control for confounders}
-
+power2x2(30/158, 65/180, n0 = 158, n1 = 180, sig.level = 0.01)
 ```
 
 Hypothesis test is set based on what constitutes surprise for the doctor
 H0: There is no difference in the adverse event odds ratio of saddle vs non-saddle in age and severity controlled groups
 H1: H0: There is a difference in the adverse event odds ratio of saddle vs non-saddle in age and severity controlled groups (two sided since no assumption made)
 
-```{r Run Fisher's exact test}
-
+```{r Run Fisher's exact test for entire set}
+exact2x2(test_mat, conf.level = 0.99)
+```
+```{r control for age}
+df_one <- df_all %>% filter(age_bin == '(19.9,35]')
+exact2x2(as.matrix(table(df_one$adverseEvent, df_one$type)), conf.level = 0.99)
+```
+```{r}
+table(df_one$adverseEvent, df_one$type)
 ```
 
 ```{r control False Discovery Rate using BH or BY}
 
 ```
 
+## How predictive are PESI and sPESI?
 
 ```{python logit, eval=FALSE, include=FALSE}
 import statsmodels.discrete.discrete_model as sm
