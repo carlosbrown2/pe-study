@@ -16,6 +16,7 @@ library(ISLR)
 library(VGAM)
 library(ggplot2)
 library(samplesizeCMH)
+library(DescTools)
 
 # file_saddle <- file.path("saddle.csv")
 # file_nosaddle <- file.path("nosaddle.csv")
@@ -25,6 +26,8 @@ file_all <- file.path('all_types.csv')
 # df_nosaddle <- read.csv(file_nosaddle, header = TRUE)
 df_model <- read.csv(file_all, header = TRUE)
 ```
+
+Within this study, the term adverse event rate and adverse event count are synonymous.
 
 ## Initial Processing
 
@@ -84,6 +87,8 @@ g_plot <- ggplot(data=df_plot)
 g_plot + geom_bar(mapping = aes(x=type, fill=Severity), position = "fill") + ggtitle('Severity by PE Type')
 ```
 
+Severity correlates highly with pe type, therefore is a potential confounder
+
 ## Check for confounding
 ```{r test whether confounding is present, crude model}
 m_crude <- glm(formula = 'adverseEvent ~ type', data = df_all, family = binomial)
@@ -95,20 +100,23 @@ m_adj <- glm(formula = 'adverseEvent ~ type + Age + Severity + Race + Gender', d
 summary(m_adj)
 ```
 
+Calculate percent change in typesaddle coefficient between models. If absolute value is greater than 10%, confounding needs to be adjusted for.
 ```{r percent change}
 beta_crude <- coefficients(m_crude)[['typesaddle']]
 beta_adj <- coefficients(m_adj)[['typesaddle']]
 (beta_adj - beta_crude) / beta_crude
 ```
+Confounding is present.
 
+Compare to VGAM package outputs for sanity check
 ```{r compare to VGAM for sanity check}
 m_vgam <- vglm(formula = 'adverseEvent ~ type + Age + Severity + Race + Gender', binomialff(link = "logitlink"), data = df_all)
 summary(m_vgam)
 ```
 
-The predictor "type" is confounded by adding in further predictors such as Age, Severity, and Race. Severity alone is the most powerful confounder and should be controlled for. We will use the Cochran-Mantel-Haenszel to account for the observed confounding effect of Severity, of which only Severities of 1 and 2 have enough sample points to be counted.
+The predictor "type" is confounded by adding in further predictors such as Age, Severity, and Race. Severity alone is the most powerful confounder and should be controlled for. Age itself is not a significant confounder. We will use the Cochran-Mantel-Haenszel to account for the observed confounding effect of Severity, of which only Severities of 1 and 2 have enough sample points to be counted.
 
-## PE Study Tables
+## 2x2 Tables
 
 2x2 Table for entire cohort
 ```{r 2x2 in just 2 dimensions}
@@ -128,7 +136,7 @@ Hypothesis test is set based on what constitutes surprise for the doctor.
 
 H0: There is no difference in the adverse event odds ratio of saddle vs non-saddle in age and severity controlled groups
 
-H1: H0: There is a difference in the adverse event odds ratio of saddle vs non-saddle in age and severity controlled groups
+H1: There is a difference in the adverse event odds ratio of saddle vs non-saddle in age and severity controlled groups
 
 Odds ratio in this case is defined as...
 
@@ -147,13 +155,36 @@ m_cmh <- mantelhaen.test(table(df_all$type, df_all$adverseEvent, df_all$Severity
 m_cmh
 ```
 
-We notice that after controlling for PE Severity in low risk patients, there is still evidence to suggest a statistically significant difference in the adverse event rates between saddle and non-saddle pulmonary embollism.
+We notice that after controlling for PE Severity in low risk patients, there is still evidence to suggest a statistically significant and practically significant difference in the adverse event counts between saddle and non-saddle pulmonary embollism.
 
+Control for multiple comparisons using Benjamini & Yekutieli correction
 ```{r control False Discovery Rate using BH or BY}
-
+pvalues <- c(m_fisher$p.value, m_cmh$p.value)
+p.adjust(pvalues, method = "BY")
 ```
 
+Given the multiple comparisons correction, and our alpha value of 1%, both tests have given p-values where we can reject the null hypothesis in favor of the alternate hypothesis. The common odds ratio confidence interval for adverse events in saddle over non-saddle is...
+
+`r m_cmh$conf.int`
+
+Patients with Saddle PE are `r round(m_cmh$estimate, digits = 2)` times as likely to experience an adverse event as those with Non-Saddle PE
+
+
 ## How predictive are PESI and sPESI?
+
+```{r predictive model sPESI}
+m_pred_spesi <- glm(formula = 'adverseEvent ~ sPESI', data = df_model, family = binomial)
+PseudoR2(m_pred_spesi, which = 'McKelveyZavoina')
+summary(m_pred_spesi)
+```
+
+```{r predictive model PESI}
+m_pred_pesi <- glm(formula = 'adverseEvent ~ PESI.Class', data = df_model, family = binomial)
+PseudoR2(m_pred_pesi, which = 'McKelveyZavoina')
+summary(m_pred_pesi)
+```
+
+Both sPESI and PESI Class are significant predictors of adverse event rates and have similar predictive power.
 
 ```{python logit, eval=FALSE, include = FALSE}
 import statsmodels.discrete.discrete_model as sm
