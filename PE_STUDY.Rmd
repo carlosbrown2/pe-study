@@ -1,7 +1,7 @@
 ---
-title: "pe_study"
+title: "PE Study"
 author: "Carlos Brown"
-date: "7/22/2020"
+date: "9/7/2020"
 output: html_document
 ---
 
@@ -12,70 +12,142 @@ library(exact2x2)
 library(tidyr)
 library(dlookr)
 library(exact2x2)
-# library(reticulate)
+library(ISLR)
+library(VGAM)
+library(ggplot2)
+library(samplesizeCMH)
 
-file_saddle <- file.path("saddle.csv")
-file_nosaddle <- file.path("nosaddle.csv")
+# file_saddle <- file.path("saddle.csv")
+# file_nosaddle <- file.path("nosaddle.csv")
 file_all <- file.path('all_types.csv')
 
-df_saddle <- read.csv(file_saddle, header = TRUE)
-df_nosaddle <- read.csv(file_nosaddle, header = TRUE)
-df_all <- read.csv(file_all, header = TRUE)
-
-paste('Number of data points for saddle:',nrow(df_saddle), sep = ' ')
-paste('Number of data points for non-saddle:',nrow(df_nosaddle), sep = ' ')
+# df_saddle <- read.csv(file_saddle, header = TRUE)
+# df_nosaddle <- read.csv(file_nosaddle, header = TRUE)
+df_model <- read.csv(file_all, header = TRUE)
 ```
 
-```{r change type to factor}
-df_saddle$type <- factor("saddle")
-df_nosaddle$type <- factor("non-saddle")
-df_all$type <- as.factor(df_all$type)
+## Initial Processing
+
+Change types and rename
+```{r change type to factor and rename}
+df_model$type <- as.factor(df_model$type)
+df_model <- df_model %>% rename(Severity = PE.Severity.1.low.risk..2.intermediate..3.massive..4.indeterminate)
+df_model$Gender <- as.factor(df_model$Gender)
+df_model$Race <-as.factor(df_model$Race)
+df_model$Severity <- as.factor(df_model$Severity)
 ```
 
+Filter for low risk patients by sPESI
+```{r Initial filter for low risk patients based on sPESI }
+df_all <- df_model %>% filter(sPESI == 0)
+```
 
+Bin by age
 ```{r bin by age}
 breaks = 5
-df_saddle$age_bin <- cut(df_saddle$Age, breaks=breaks)
-df_nosaddle$age_bin <- cut(df_nosaddle$Age, breaks=breaks)
 df_all$age_bin <- cut(df_all$Age, breaks=breaks)
 ```
 
-## PE Study
+## What constitutes an Adverse Event?
+1. Death, either in hospital or within 30 days of release
+2. Arrhythmia that required treatment
+3. Inotropes
+4. Vasopressors
+5. Use of Non-Rebreather mask
+6. ICU Stay
+7. Shock
+8. ACLS
+9. Intubation
+10. tPA
+11. Transfusion
+12. EKOS
 
-```{r dianose saddle}
-diagnose(df_saddle)
+## Visualize Distributions
+```{r ggplot barchart, echo=FALSE}
+df_plot <- df_all %>% mutate(adverseEvent = as.factor(adverseEvent))
+g_plot <- ggplot(data=df_plot)
+g_plot + geom_bar(mapping = aes(x=type, fill=adverseEvent)) + ggtitle('Adverse Event Count by PE Type')
 ```
 
-```{r diagnose non-saddle}
-diagnose(df_nosaddle)
+```{r adverse event count by PE severity, echo=FALSE}
+g_plot <- ggplot(data=df_plot)
+g_plot + geom_bar(mapping = aes(x=Severity, fill=adverseEvent)) + ggtitle('Adverse Event Count by PE Severity')
 ```
 
-## Tables
+```{r Adverse Events by Age Range, echo=FALSE}
+g_plot <- ggplot(data=df_plot)
+g_plot + geom_bar(mapping = aes(x=age_bin, fill=adverseEvent)) + ggtitle('Adverse Event Count vs Age Range')
+```
 
-```{r adverse event along 3 dimensions}
-table_group <- table(df_all$adverseEvent, df_all$type, df_all$age_bin)
-test_mat <- as.matrix(table(df_all$adverseEvent, df_all$type))
+```{r Severity by PE Type, echo=FALSE}
+g_plot <- ggplot(data=df_plot)
+g_plot + geom_bar(mapping = aes(x=type, fill=Severity), position = "fill") + ggtitle('Severity by PE Type')
+```
+
+## Check for confounding
+```{r test whether confounding is present, crude model}
+m_crude <- glm(formula = 'adverseEvent ~ type', data = df_all, family = binomial)
+summary(m_crude)
+```
+
+```{r test whether confounding is present, adjusted}
+m_adj <- glm(formula = 'adverseEvent ~ type + Age + Severity + Race + Gender', data = df_all, family = binomial)
+summary(m_adj)
+```
+
+```{r percent change}
+beta_crude <- coefficients(m_crude)[['typesaddle']]
+beta_adj <- coefficients(m_adj)[['typesaddle']]
+(beta_adj - beta_crude) / beta_crude
+```
+
+```{r compare to VGAM for sanity check}
+m_vgam <- vglm(formula = 'adverseEvent ~ type + Age + Severity + Race + Gender', binomialff(link = "logitlink"), data = df_all)
+summary(m_vgam)
+```
+
+The predictor "type" is confounded by adding in further predictors such as Age, Severity, and Race. Severity alone is the most powerful confounder and should be controlled for. We will use the Cochran-Mantel-Haenszel to account for the observed confounding effect of Severity, of which only Severities of 1 and 2 have enough sample points to be counted.
+
+## PE Study Tables
+
+2x2 Table for entire cohort
+```{r 2x2 in just 2 dimensions}
+# table_group <- table(df_all$adverseEvent, df_all$type, df_all$age_bin)
+test_mat <- as.matrix(table(df_all$type, df_all$adverseEvent))
 test_mat
 ```
 
-```{r power analysis}
-power2x2(30/158, 65/180, n0 = 158, n1 = 180, sig.level = 0.01)
+
+2x2 Table for cohort, by Severity
+```{r 2x2 in 3 dimensions}
+table(df_all$type, df_all$adverseEvent, df_all$Severity)
 ```
 
-Hypothesis test is set based on what constitutes surprise for the doctor
+
+Hypothesis test is set based on what constitutes surprise for the doctor.
+
 H0: There is no difference in the adverse event odds ratio of saddle vs non-saddle in age and severity controlled groups
-H1: H0: There is a difference in the adverse event odds ratio of saddle vs non-saddle in age and severity controlled groups (two sided since no assumption made)
 
-```{r Run Fisher's exact test for entire set}
-exact2x2(test_mat, conf.level = 0.99)
+H1: H0: There is a difference in the adverse event odds ratio of saddle vs non-saddle in age and severity controlled groups
+
+Odds ratio in this case is defined as...
+
+(saddle adverse event count / saddle no adverse event count) / (non-saddle adverse event count / non-saddle no adverse event count)
+
+Test 1: Fisher's exact test for entire cohort
+```{r Run Fishers exact test for entire set}
+m_fisher <- exact2x2(test_mat, conf.level = 0.99)
+m_fisher
 ```
-```{r control for age}
-df_one <- df_all %>% filter(age_bin == '(19.9,35]')
-exact2x2(as.matrix(table(df_one$adverseEvent, df_one$type)), conf.level = 0.99)
+
+There is evidence to reject the null hypothesis, however we have to control for confounding factor of PE Severity. Use the Cochran-Mantel-Haenszel test.
+
+```{r Cochran-Mantel-Haenszel to control for Severity}
+m_cmh <- mantelhaen.test(table(df_all$type, df_all$adverseEvent, df_all$Severity), exact = TRUE)
+m_cmh
 ```
-```{r}
-table(df_one$adverseEvent, df_one$type)
-```
+
+We notice that after controlling for PE Severity in low risk patients, there is still evidence to suggest a statistically significant difference in the adverse event rates between saddle and non-saddle pulmonary embollism.
 
 ```{r control False Discovery Rate using BH or BY}
 
@@ -83,10 +155,10 @@ table(df_one$adverseEvent, df_one$type)
 
 ## How predictive are PESI and sPESI?
 
-```{python logit, eval=FALSE, include=FALSE}
+```{python logit, eval=FALSE, include = FALSE}
 import statsmodels.discrete.discrete_model as sm
 
-feat_cols = ['Age','Hight-cm','Weight-kg','HR','SBP','Temp (F)','PA/Aorta Ratio','RV/LV Ratio', 'PESI Class' , 'sPESI (low risk = 0; 1 = 1 or greater)','adverseEvent']
+feat_cols = ['Age','Hight-cm','Weight-kg','HR','SBP','Temp (F)','PA/Aorta Ratio','RV/LV Ratio', 'PESI.Class' , 'sPESI', 'Race', 'adverseEvent']
 
 features = df_saddle[feat_cols].dropna()
 target = features['adverseEvent']
@@ -98,3 +170,18 @@ res = logit.fit()
 print(res.summary())
 ```
 
+```{r control for age, eval=FALSE, include=FALSE}
+age_vector <- levels(df_all$age_bin)
+
+evaluate_fisher <- function(bin, severity){
+  df_bin <- df_all %>% filter(age_bin == get("bin"))
+  severities <- unique(df_bin$Severity)
+  for (sev in severities) {
+    model_obj <- exact2x2(as.matrix(table(df_bin$adverseEvent, df_bin$type)), conf.level = 0.99)
+  }
+  
+  return(model_obj)
+}
+age_controlled_results <- lapply(age_vector, evaluate_fisher)
+
+```
