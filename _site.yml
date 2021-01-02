@@ -3,4 +3,6 @@ navbar:
   title: "PE Study"
   left:
     - text: "Study"
-      href: index.html
+      href: PE_STUDY.html
+    - text: "About"
+      href: about.html
