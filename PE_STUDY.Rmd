@@ -11,38 +11,42 @@ library(tidyverse)
 library(exact2x2)
 library(tidyr)
 library(dlookr)
-library(exact2x2)
 library(ISLR)
 library(VGAM)
 library(ggplot2)
 library(samplesizeCMH)
 library(DescTools)
 
-# file_saddle <- file.path("saddle.csv")
-# file_nosaddle <- file.path("nosaddle.csv")
-file_all <- file.path('all_types.csv')
+file_all <- file.path('objects', 'all_types.csv')
 
-# df_saddle <- read.csv(file_saddle, header = TRUE)
-# df_nosaddle <- read.csv(file_nosaddle, header = TRUE)
 df_model <- read.csv(file_all, header = TRUE)
 ```
 
-Within this study, the term adverse event rate and adverse event count are synonymous.
+## Introduction
+There are two major types of Pulmonary Embollism that present in patients, Saddle and Non-Saddle. For low risk patients, defined here as submassive, is there a difference in adverse event rates between Saddle and Non-Saddle patients? We would also like to investigate the predictive power of traditional risk stratifiers like sPESI / PESI, and compare to BOVA Score.
+
+## Definitions
+- Within this study, the term adverse event rate and adverse event count are synonymous.
+- PE = Pulmonary Embollism
+- Submassive refers to patients with PE Severity of 1 or 2. A score of 3 indicates Massive.
+- In the 2x2 tables, 1 indicates an adverse event, 0 indicates no adverse event
 
 ## Initial Processing
 
 Change types and rename
 ```{r change type to factor and rename}
-df_model$type <- as.factor(df_model$type)
 df_model <- df_model %>% rename(Severity = PE.Severity.1.low.risk..2.intermediate..3.massive..4.indeterminate)
+df_model$type <- as.factor(df_model$type)
 df_model$Gender <- as.factor(df_model$Gender)
 df_model$Race <-as.factor(df_model$Race)
-df_model$Severity <- as.factor(df_model$Severity)
+df_model$BOVA.Score <- as.factor(df_model$BOVA.Score)
+
 ```
 
-Filter for low risk patients by sPESI
-```{r Initial filter for low risk patients based on sPESI }
-df_all <- df_model %>% filter(sPESI == 0)
+Filter for low risk patients by PE Severity
+```{r Initial filter for low risk patients based on submassive Severity}
+df_all <- df_model %>% filter(Severity < 3)
+df_all$Severity <- as.factor(df_all$Severity)
 ```
 
 Bin by age
@@ -57,13 +61,12 @@ df_all$age_bin <- cut(df_all$Age, breaks=breaks)
 3. Inotropes
 4. Vasopressors
 5. Use of Non-Rebreather mask
-6. ICU Stay
-7. Shock
-8. ACLS
-9. Intubation
-10. tPA
-11. Transfusion
-12. EKOS
+6. Shock
+7. ACLS
+8. Intubation
+9. tPA
+10. Transfusion
+11. EKOS
 
 ## Visualize Distributions
 ```{r ggplot barchart, echo=FALSE}
@@ -77,17 +80,29 @@ g_plot <- ggplot(data=df_plot)
 g_plot + geom_bar(mapping = aes(x=Severity, fill=adverseEvent)) + ggtitle('Adverse Event Count by PE Severity')
 ```
 
+### Severity is a potential confounder, noticing the slight correlation with adverse event rates
+
 ```{r Adverse Events by Age Range, echo=FALSE}
 g_plot <- ggplot(data=df_plot)
 g_plot + geom_bar(mapping = aes(x=age_bin, fill=adverseEvent)) + ggtitle('Adverse Event Count vs Age Range')
 ```
 
-```{r Severity by PE Type, echo=FALSE}
-g_plot <- ggplot(data=df_plot)
-g_plot + geom_bar(mapping = aes(x=type, fill=Severity), position = "fill") + ggtitle('Severity by PE Type')
+## 2x2 Tables
+
+### 2x2 Table for entire cohort
+
+```{r 2x2 in just 2 dimensions}
+# table_group <- table(df_all$adverseEvent, df_all$type, df_all$age_bin)
+test_mat <- as.matrix(table(df_all$type, df_all$adverseEvent))
+test_mat
 ```
 
-Severity correlates highly with pe type, therefore is a potential confounder
+
+### 2x2 Table for cohort, by PE Severity
+```{r 2x2 in 3 dimensions}
+table(df_all$type, df_all$adverseEvent, df_all$Severity)
+```
+
 
 ## Check for confounding
 ```{r test whether confounding is present, crude model}
@@ -100,62 +115,49 @@ m_adj <- glm(formula = 'adverseEvent ~ type + Age + Severity + Race + Gender', d
 summary(m_adj)
 ```
 
-Calculate percent change in typesaddle coefficient between models. If absolute value is greater than 10%, confounding needs to be adjusted for.
+### Calculate percent change in typesaddle coefficient between models. If absolute value is greater than 10%, confounding needs to be adjusted for.
+
 ```{r percent change}
 beta_crude <- coefficients(m_crude)[['typesaddle']]
 beta_adj <- coefficients(m_adj)[['typesaddle']]
 (beta_adj - beta_crude) / beta_crude
 ```
-Confounding is present.
+Confounding is present, however the GLM models suggest that there is no relationship between adverse event rates and PE type (saddle vs non-saddle)
 
 Compare to VGAM package outputs for sanity check
 ```{r compare to VGAM for sanity check}
 m_vgam <- vglm(formula = 'adverseEvent ~ type + Age + Severity + Race + Gender', binomialff(link = "logitlink"), data = df_all)
-summary(m_vgam)
+coefficients(m_vgam)[['typesaddle']]
 ```
 
-The predictor "type" is confounded by adding in further predictors such as Age, Severity, and Race. Severity alone is the most powerful confounder and should be controlled for. Age itself is not a significant confounder. We will use the Cochran-Mantel-Haenszel to account for the observed confounding effect of Severity, of which only Severities of 1 and 2 have enough sample points to be counted.
-
-## 2x2 Tables
-
-2x2 Table for entire cohort
-```{r 2x2 in just 2 dimensions}
-# table_group <- table(df_all$adverseEvent, df_all$type, df_all$age_bin)
-test_mat <- as.matrix(table(df_all$type, df_all$adverseEvent))
-test_mat
-```
+The predictor "type" is confounded by adding in further predictors such as Age, Severity, and Race. Severity alone is the most powerful confounder and should be controlled for. We will use the Cochran-Mantel-Haenszel to account for the observed confounding effect of Severity.
 
 
-2x2 Table for cohort, by Severity
-```{r 2x2 in 3 dimensions}
-table(df_all$type, df_all$adverseEvent, df_all$Severity)
-```
+### Hypothesis test is set based on what constitutes surprise for the doctor.
 
+**H0**: There is no difference in the adverse event odds ratio of saddle vs non-saddle in severity controlled groups
 
-Hypothesis test is set based on what constitutes surprise for the doctor.
-
-H0: There is no difference in the adverse event odds ratio of saddle vs non-saddle in age and severity controlled groups
-
-H1: There is a difference in the adverse event odds ratio of saddle vs non-saddle in age and severity controlled groups
+**H1**: There is a difference in the adverse event odds ratio of saddle vs non-saddle in severity controlled groups
 
 Odds ratio in this case is defined as...
 
 (saddle adverse event count / saddle no adverse event count) / (non-saddle adverse event count / non-saddle no adverse event count)
 
-Test 1: Fisher's exact test for entire cohort
+### Test 1: Fisher's exact test for entire cohort
 ```{r Run Fishers exact test for entire set}
 m_fisher <- exact2x2(test_mat, conf.level = 0.99)
 m_fisher
 ```
 
-There is evidence to reject the null hypothesis, however we have to control for confounding factor of PE Severity. Use the Cochran-Mantel-Haenszel test.
+Based on test results, we do not reject the null hypothesis, however we will still control for confounding factor of PE Severity. Use the Cochran-Mantel-Haenszel test.
 
+### Test 2: Cochran-Mantel-Haenszel test to control for PE Severity
 ```{r Cochran-Mantel-Haenszel to control for Severity}
 m_cmh <- mantelhaen.test(table(df_all$type, df_all$adverseEvent, df_all$Severity), exact = TRUE)
 m_cmh
 ```
 
-We notice that after controlling for PE Severity in low risk patients, there is still evidence to suggest a statistically significant and practically significant difference in the adverse event counts between saddle and non-saddle pulmonary embollism.
+We notice that after controlling for PE Severity in submassive patients, there is no evidence to suggest a statistically significant or practically significant difference in the adverse event counts between saddle and non-saddle pulmonary embollism.
 
 Control for multiple comparisons using Benjamini & Yekutieli correction
 ```{r control False Discovery Rate using BH or BY}
@@ -163,14 +165,14 @@ pvalues <- c(m_fisher$p.value, m_cmh$p.value)
 p.adjust(pvalues, method = "BY")
 ```
 
-Given the multiple comparisons correction, and our alpha value of 1%, both tests have given p-values where we can reject the null hypothesis in favor of the alternate hypothesis. The common odds ratio confidence interval for adverse events in saddle over non-saddle is...
+Given the multiple comparisons correction, and our alpha value of 1%, both tests have given p-values where we cannot reject the null hypothesis in favor of the alternate hypothesis. The common odds ratio confidence interval for adverse events in saddle over non-saddle is...
 
 `r m_cmh$conf.int`
 
-Patients with Saddle PE are `r round(m_cmh$estimate, digits = 2)` times as likely to experience an adverse event as those with Non-Saddle PE
+**Submassive Patients with Saddle PE are no more likely to experience an adverse event as those with Non-Saddle PE**
 
 
-## How predictive are PESI and sPESI?
+## How predictive are PESI, sPESI, and BOVA?
 
 ```{r predictive model sPESI}
 m_pred_spesi <- glm(formula = 'adverseEvent ~ sPESI', data = df_model, family = binomial)
@@ -184,35 +186,10 @@ PseudoR2(m_pred_pesi, which = 'McKelveyZavoina')
 summary(m_pred_pesi)
 ```
 
-Both sPESI and PESI Class are significant predictors of adverse event rates and have similar predictive power.
-
-```{python logit, eval=FALSE, include = FALSE}
-import statsmodels.discrete.discrete_model as sm
-
-feat_cols = ['Age','Hight-cm','Weight-kg','HR','SBP','Temp (F)','PA/Aorta Ratio','RV/LV Ratio', 'PESI.Class' , 'sPESI', 'Race', 'adverseEvent']
-
-features = df_saddle[feat_cols].dropna()
-target = features['adverseEvent']
-
-features.drop(columns='adverseEvent', inplace=True)
-logit = sm.Logit(target.values, features.astype(float))
-res = logit.fit()
-
-print(res.summary())
+```{r predictive model BOVA}
+m_pred_bova <- glm(formula = 'adverseEvent ~ BOVA.Score', data = df_model, family = binomial)
+PseudoR2(m_pred_bova, which = 'McKelveyZavoina')
+summary(m_pred_bova)
 ```
 
-```{r control for age, eval=FALSE, include=FALSE}
-age_vector <- levels(df_all$age_bin)
-
-evaluate_fisher <- function(bin, severity){
-  df_bin <- df_all %>% filter(age_bin == get("bin"))
-  severities <- unique(df_bin$Severity)
-  for (sev in severities) {
-    model_obj <- exact2x2(as.matrix(table(df_bin$adverseEvent, df_bin$type)), conf.level = 0.99)
-  }
-  
-  return(model_obj)
-}
-age_controlled_results <- lapply(age_vector, evaluate_fisher)
-
-```
+Both sPESI and PESI Class are significant predictors of adverse event rates and have similar predictive power. Surprisingly, BOVA score has a high Pseudo R2 value, as well as having a lower AIC value compared to sPESI and PESI, suggesting that it is a better diagnostic tool for predicting adverse events than sPESI or PESI are.
