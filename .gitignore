@@ -4,3 +4,4 @@
 .Ruserdata
 objects/
 __pycache__/
+.DS_Store
