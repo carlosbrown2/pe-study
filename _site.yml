@@ -4,10 +4,6 @@ navbar:
   title: "PE Study"
   left:
     - text: "About"
-      href: about.html
-    - text: "Study"
       href: index.html
-
-output:
-  html_document:
-    theme: cayman
+    - text: "Study"
+      href: study.html

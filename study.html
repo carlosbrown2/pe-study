@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>PE Study</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">PE Study</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">About</a>
+</li>
+<li>
+  <a href="study.html">Study</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">PE Study</h1>
+
+</div>
+
+
+<div id="initial-processing" class="section level2">
+<h2>Initial Processing</h2>
+<p>Change types and rename</p>
+<pre class="r"><code>df_model &lt;- df_model %&gt;% rename(Severity = PE.Severity.1.low.risk..2.intermediate..3.massive..4.indeterminate)
+df_model$type &lt;- as.factor(df_model$type)
+df_model$Gender &lt;- as.factor(df_model$Gender)
+df_model$Race &lt;-as.factor(df_model$Race)
+df_model$BOVA.Score &lt;- as.factor(df_model$BOVA.Score)</code></pre>
+<p>Filter for low risk patients by PE Severity</p>
+<pre class="r"><code>df_all &lt;- df_model %&gt;% filter(Severity &lt; 3)
+df_all$Severity &lt;- as.factor(df_all$Severity)</code></pre>
+<p>Bin by age</p>
+<pre class="r"><code>breaks = 5
+df_all$age_bin &lt;- cut(df_all$Age, breaks=breaks)</code></pre>
+</div>
+<div id="what-constitutes-an-adverse-event" class="section level2">
+<h2>What constitutes an Adverse Event?</h2>
+<ol style="list-style-type: decimal">
+<li>Death, either in hospital or within 30 days of release</li>
+<li>Arrhythmia that required treatment</li>
+<li>Inotropes</li>
+<li>Vasopressors</li>
+<li>Use of Non-Rebreather mask</li>
+<li>Shock</li>
+<li>ACLS</li>
+<li>Intubation</li>
+<li>tPA</li>
+<li>Transfusion</li>
+<li>EKOS</li>
+</ol>
+</div>
+<div id="visualize-distributions" class="section level2">
+<h2>Visualize Distributions</h2>
+<p><img src="study_files/figure-html/ggplot%20barchart-1.png" width="672" /></p>
+<p><img src="study_files/figure-html/adverse%20event%20count%20by%20PE%20severity-1.png" width="672" /></p>
+<div id="severity-is-a-potential-confounder-noticing-the-slight-correlation-with-adverse-event-rates" class="section level3">
+<h3>Severity is a potential confounder, noticing the slight correlation with adverse event rates</h3>
+<p><img src="study_files/figure-html/Adverse%20Events%20by%20Age%20Range-1.png" width="672" /></p>
+</div>
+</div>
+<div id="x2-tables" class="section level2">
+<h2>2x2 Tables</h2>
+<div id="x2-table-for-entire-cohort" class="section level3">
+<h3>2x2 Table for entire cohort</h3>
+<pre class="r"><code># table_group &lt;- table(df_all$adverseEvent, df_all$type, df_all$age_bin)
+test_mat &lt;- as.matrix(table(df_all$type, df_all$adverseEvent))
+test_mat</code></pre>
+<pre><code>##             
+##                0   1
+##   non-saddle 135   5
+##   saddle     146   8</code></pre>
+</div>
+<div id="x2-table-for-cohort-by-pe-severity" class="section level3">
+<h3>2x2 Table for cohort, by PE Severity</h3>
+<pre class="r"><code>table(df_all$type, df_all$adverseEvent, df_all$Severity)</code></pre>
+<pre><code>## , ,  = 1
+## 
+##             
+##                0   1
+##   non-saddle  94   1
+##   saddle      37   2
+## 
+## , ,  = 2
+## 
+##             
+##                0   1
+##   non-saddle  41   4
+##   saddle     109   6</code></pre>
+</div>
+</div>
+<div id="check-for-confounding" class="section level2">
+<h2>Check for confounding</h2>
+<pre class="r"><code>m_crude &lt;- glm(formula = &#39;adverseEvent ~ type&#39;, data = df_all, family = binomial)
+summary(m_crude)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = &quot;adverseEvent ~ type&quot;, family = binomial, data = df_all)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -0.3266  -0.3266  -0.2697  -0.2697   2.5816  
+## 
+## Coefficients:
+##             Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)  -3.2958     0.4554  -7.237 4.59e-13 ***
+## typesaddle    0.3917     0.5825   0.672    0.501    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 106.50  on 293  degrees of freedom
+## Residual deviance: 106.04  on 292  degrees of freedom
+## AIC: 110.04
+## 
+## Number of Fisher Scoring iterations: 6</code></pre>
+<pre class="r"><code>m_adj &lt;- glm(formula = &#39;adverseEvent ~ type + Age + Severity + Race + Gender&#39;, data = df_all, family = binomial)
+summary(m_adj)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = &quot;adverseEvent ~ type + Age + Severity + Race + Gender&quot;, 
+##     family = binomial, data = df_all)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -0.5006  -0.3600  -0.2568  -0.1984   2.7476  
+## 
+## Coefficients:
+##               Estimate Std. Error z value Pr(&gt;|z|)
+## (Intercept)  -19.05928 3956.18053  -0.005    0.996
+## typesaddle     0.08057    0.62988   0.128    0.898
+## Age            0.02755    0.02139   1.288    0.198
+## Severity2      0.94037    0.72126   1.304    0.192
+## RaceB         13.57175 3956.18041   0.003    0.997
+## RaceH         -1.23444 4805.32103   0.000    1.000
+## RaceNH        -1.14524 4322.76564   0.000    1.000
+## Racerefused   -0.65935 5594.88396   0.000    1.000
+## RaceW         13.50987 3956.18040   0.003    0.997
+## GenderM        0.11571    0.60291   0.192    0.848
+## GenderM      -14.69737 3956.18039  -0.004    0.997
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 106.50  on 293  degrees of freedom
+## Residual deviance: 100.55  on 283  degrees of freedom
+## AIC: 122.55
+## 
+## Number of Fisher Scoring iterations: 16</code></pre>
+<div id="calculate-percent-change-in-typesaddle-coefficient-between-models.-if-absolute-value-is-greater-than-10-confounding-needs-to-be-adjusted-for." class="section level3">
+<h3>Calculate percent change in typesaddle coefficient between models. If absolute value is greater than 10%, confounding needs to be adjusted for.</h3>
+<pre class="r"><code>beta_crude &lt;- coefficients(m_crude)[[&#39;typesaddle&#39;]]
+beta_adj &lt;- coefficients(m_adj)[[&#39;typesaddle&#39;]]
+(beta_adj - beta_crude) / beta_crude</code></pre>
+<pre><code>## [1] -0.794297</code></pre>
+<p>Confounding is present, however the GLM models suggest that there is no relationship between adverse event rates and PE type (saddle vs non-saddle)</p>
+<p>Compare to VGAM package outputs for sanity check</p>
+<pre class="r"><code>m_vgam &lt;- vglm(formula = &#39;adverseEvent ~ type + Age + Severity + Race + Gender&#39;, binomialff(link = &quot;logitlink&quot;), data = df_all)
+coefficients(m_vgam)[[&#39;typesaddle&#39;]]</code></pre>
+<pre><code>## [1] 0.08056805</code></pre>
+<p>The predictor “type” is confounded by adding in further predictors such as Age, Severity, and Race. Severity alone is the most powerful confounder and should be controlled for. We will use the Cochran-Mantel-Haenszel to account for the observed confounding effect of Severity.</p>
+</div>
+<div id="hypothesis-test-is-set-based-on-what-constitutes-surprise-for-the-doctor." class="section level3">
+<h3>Hypothesis test is set based on what constitutes surprise for the doctor.</h3>
+<p><strong>H0</strong>: There is no difference in the adverse event odds ratio of saddle vs non-saddle in severity controlled groups</p>
+<p><strong>H1</strong>: There is a difference in the adverse event odds ratio of saddle vs non-saddle in severity controlled groups</p>
+<p>Odds ratio in this case is defined as…</p>
+<p>(saddle adverse event count / saddle no adverse event count) / (non-saddle adverse event count / non-saddle no adverse event count)</p>
+</div>
+<div id="test-1-fishers-exact-test-for-entire-cohort" class="section level3">
+<h3>Test 1: Fisher’s exact test for entire cohort</h3>
+<pre class="r"><code>m_fisher &lt;- exact2x2(test_mat, conf.level = 0.99)
+m_fisher</code></pre>
+<pre><code>## 
+##  Two-sided Fisher&#39;s Exact Test (usual method using minimum likelihood)
+## 
+## data:  test_mat
+## p-value = 0.5782
+## alternative hypothesis: true odds ratio is not equal to 1
+## 99 percent confidence interval:
+##  0.3357 7.6156
+## sample estimates:
+## odds ratio 
+##   1.477511</code></pre>
+<p>Based on test results, we do not reject the null hypothesis, however we will still control for confounding factor of PE Severity. Use the Cochran-Mantel-Haenszel test.</p>
+</div>
+<div id="test-2-cochran-mantel-haenszel-test-to-control-for-pe-severity" class="section level3">
+<h3>Test 2: Cochran-Mantel-Haenszel test to control for PE Severity</h3>
+<pre class="r"><code>m_cmh &lt;- mantelhaen.test(table(df_all$type, df_all$adverseEvent, df_all$Severity), exact = TRUE)
+m_cmh</code></pre>
+<pre><code>## 
+##  Exact conditional test of independence in 2 x 2 x k tables
+## 
+## data:  table(df_all$type, df_all$adverseEvent, df_all$Severity)
+## S = 135, p-value = 1
+## alternative hypothesis: true common odds ratio is not equal to 1
+## 95 percent confidence interval:
+##  0.2456193 4.3600803
+## sample estimates:
+## common odds ratio 
+##          0.976237</code></pre>
+<p>We notice that after controlling for PE Severity in submassive patients, there is no evidence to suggest a statistically significant or practically significant difference in the adverse event counts between saddle and non-saddle pulmonary embollism.</p>
+<p>Control for multiple comparisons using Benjamini &amp; Yekutieli correction</p>
+<pre class="r"><code>pvalues &lt;- c(m_fisher$p.value, m_cmh$p.value)
+p.adjust(pvalues, method = &quot;BY&quot;)</code></pre>
+<pre><code>## [1] 1 1</code></pre>
+<p>Given the multiple comparisons correction, and our alpha value of 1%, both tests have given p-values where we cannot reject the null hypothesis in favor of the alternate hypothesis. The common odds ratio confidence interval for adverse events in saddle over non-saddle is…</p>
+<p>0.2456193, 4.3600803</p>
+<p><strong>Submassive Patients with Saddle PE are no more likely to experience an adverse event as those with Non-Saddle PE</strong></p>
+</div>
+</div>
+<div id="how-predictive-are-pesi-spesi-and-bova" class="section level2">
+<h2>How predictive are PESI, sPESI, and BOVA?</h2>
+<pre class="r"><code>m_pred_spesi &lt;- glm(formula = &#39;adverseEvent ~ sPESI&#39;, data = df_model, family = binomial)
+PseudoR2(m_pred_spesi, which = &#39;McKelveyZavoina&#39;)</code></pre>
+<pre><code>## McKelveyZavoina 
+##       0.3473808</code></pre>
+<pre class="r"><code>summary(m_pred_spesi)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = &quot;adverseEvent ~ sPESI&quot;, family = binomial, data = df_model)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -0.5105  -0.5105  -0.5105  -0.1310   3.0861  
+## 
+## Coefficients:
+##             Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)   -4.754      1.004  -4.733 2.21e-06 ***
+## sPESI          2.782      1.025   2.714  0.00666 ** 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 193.1  on 337  degrees of freedom
+## Residual deviance: 175.6  on 336  degrees of freedom
+## AIC: 179.6
+## 
+## Number of Fisher Scoring iterations: 7</code></pre>
+<pre class="r"><code>m_pred_pesi &lt;- glm(formula = &#39;adverseEvent ~ PESI.Class&#39;, data = df_model, family = binomial)
+PseudoR2(m_pred_pesi, which = &#39;McKelveyZavoina&#39;)</code></pre>
+<pre><code>## McKelveyZavoina 
+##       0.3012967</code></pre>
+<pre class="r"><code>summary(m_pred_pesi)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = &quot;adverseEvent ~ PESI.Class&quot;, family = binomial, 
+##     data = df_model)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -0.7894  -0.3462  -0.2239  -0.1441   3.0242  
+## 
+## Coefficients:
+##             Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)  -5.4515     0.7631  -7.144 9.04e-13 ***
+## PESI.Class    0.8890     0.1842   4.826 1.39e-06 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 193.10  on 337  degrees of freedom
+## Residual deviance: 162.67  on 336  degrees of freedom
+## AIC: 166.67
+## 
+## Number of Fisher Scoring iterations: 6</code></pre>
+<pre class="r"><code>m_pred_bova &lt;- glm(formula = &#39;adverseEvent ~ BOVA.Score&#39;, data = df_model, family = binomial)
+PseudoR2(m_pred_bova, which = &#39;McKelveyZavoina&#39;)</code></pre>
+<pre><code>## McKelveyZavoina 
+##       0.9658163</code></pre>
+<pre class="r"><code>summary(m_pred_bova)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = &quot;adverseEvent ~ BOVA.Score&quot;, family = binomial, 
+##     data = df_model)
+## 
+## Deviance Residuals: 
+##      Min        1Q    Median        3Q       Max  
+## -0.60386  -0.34305  -0.31495  -0.00005   2.62068  
+## 
+## Coefficients:
+##                                                   Estimate Std. Error z value
+## (Intercept)                                        -2.8034     0.7282  -3.850
+## BOVA.Score0                                       -17.7627  1722.1259  -0.010
+## BOVA.Score1                                         1.0116     0.9587   1.055
+## BOVA.Score2                                        -0.1756     0.9384  -0.187
+## BOVA.Score3                                         0.2384     1.0338   0.231
+## BOVA.Score4                                        -0.5978     1.2505  -0.478
+## BOVA.Score5                                         1.0986     0.8528   1.288
+## BOVA.Score7                                         1.1939     1.3154   0.908
+## BOVA.Scoredoes not qualify for scoring, SBP &lt;90    23.3694 12537.2648   0.002
+## BOVA.Scoredoes not quality for scoring, BP &lt;90     23.3694  6701.4500   0.003
+## BOVA.Scoredoes not quality for scoring, SBP &lt;90    23.3694 17730.3699   0.001
+##                                                 Pr(&gt;|z|)    
+## (Intercept)                                     0.000118 ***
+## BOVA.Score0                                     0.991770    
+## BOVA.Score1                                     0.291366    
+## BOVA.Score2                                     0.851590    
+## BOVA.Score3                                     0.817615    
+## BOVA.Score4                                     0.632582    
+## BOVA.Score5                                     0.197663    
+## BOVA.Score7                                     0.364067    
+## BOVA.Scoredoes not qualify for scoring, SBP &lt;90 0.998513    
+## BOVA.Scoredoes not quality for scoring, BP &lt;90  0.997218    
+## BOVA.Scoredoes not quality for scoring, SBP &lt;90 0.998948    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 193.10  on 337  degrees of freedom
+## Residual deviance: 118.72  on 327  degrees of freedom
+## AIC: 140.72
+## 
+## Number of Fisher Scoring iterations: 19</code></pre>
+<p>Both sPESI and PESI Class are significant predictors of adverse event rates and have similar predictive power. Surprisingly, BOVA score has a high Pseudo R2 value, as well as having a lower AIC value compared to sPESI and PESI, suggesting that it is a better diagnostic tool for predicting adverse events than sPESI or PESI are.</p>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
