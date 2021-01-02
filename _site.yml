@@ -1,0 +1,6 @@
+name: "pe-study"
+navbar:
+  title: "PE Study"
+  left:
+    - text: "Study"
+      href: index.html
