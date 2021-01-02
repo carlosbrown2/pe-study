@@ -3,7 +3,10 @@ output_dir: "."
 navbar:
   title: "PE Study"
   left:
-    - text: "Study"
-      href: index.html
     - text: "About"
       href: about.html
+    - text: "Study"
+      href: index.html
+output:
+  html_document:
+    theme: cayman
