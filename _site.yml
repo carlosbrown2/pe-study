@@ -7,6 +7,7 @@ navbar:
       href: about.html
     - text: "Study"
       href: index.html
+
 output:
   html_document:
     theme: cayman
